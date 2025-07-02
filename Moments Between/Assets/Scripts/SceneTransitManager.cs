@@ -19,17 +19,11 @@ public class SceneTransitionManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    /// <summary>
-    /// Lädt eine Szene als Flashback-Level.
-    /// </summary>
     public void LoadFlashback(string flashbackSceneName)
     {
         StartCoroutine(LoadSceneAsync(flashbackSceneName));
     }
 
-    /// <summary>
-    /// Kehrt in die Hub-Scene zurück.
-    /// </summary>
     public void ReturnToHub(string hubSceneName)
     {
         StartCoroutine(LoadSceneAsync(hubSceneName));
@@ -38,7 +32,6 @@ public class SceneTransitionManager : MonoBehaviour
     private IEnumerator LoadSceneAsync(string sceneName)
     {
         var asyncOp = SceneManager.LoadSceneAsync(sceneName);
-        while (!asyncOp.isDone)
-            yield return null;
+        while (!asyncOp.isDone) yield return null;
     }
 }
