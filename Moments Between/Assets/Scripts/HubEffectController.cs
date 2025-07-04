@@ -1,5 +1,4 @@
 // HubEffectController.cs
-// Führt Effekte in der Hub-Szene basierend auf mehreren Entscheidungen aus.
 using UnityEngine;
 using System;
 using System.Collections.Generic;
@@ -7,48 +6,33 @@ using System.Collections.Generic;
 [Serializable]
 public class LevelOutcome
 {
-    [Tooltip("Level-ID passend zu FlashbackDecisionTrigger.levelID")] public string levelID;
+    public string levelID;
     public GameObject leftOutcomeObject;
     public GameObject rightOutcomeObject;
 }
 
 public class HubEffectController : MonoBehaviour
 {
-    [Header("Level Outcomes")]
-    [Tooltip("Konfiguration der Auswirkungen pro Flashback-Level")]
     public List<LevelOutcome> levelOutcomes = new List<LevelOutcome>();
 
     void OnEnable()
     {
-        GameManager.Instance.OnFlashbackChoiceChanged += ApplyChoice;
-        foreach (var outcome in levelOutcomes)
-        {
-            var choice = GameManager.Instance.GetFlashbackChoice(outcome.levelID);
-            ApplyChoice(outcome.levelID, choice);
-        }
+        GameManager.Instance.OnFlashbackChoiceChanged += Apply;
+        foreach (var o in levelOutcomes)
+            Apply(o.levelID, GameManager.Instance.GetFlashbackChoice(o.levelID));
     }
 
     void OnDisable()
     {
-        if (GameManager.Instance)
-            GameManager.Instance.OnFlashbackChoiceChanged -= ApplyChoice;
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnFlashbackChoiceChanged -= Apply;
     }
 
-    private void ApplyChoice(string levelID, FlashbackChoice choice)
+    private void Apply(string levelID, FlashbackChoice choice)
     {
-        var outcome = levelOutcomes.Find(o => o.levelID == levelID);
-        if (outcome == null) return;
-        if (outcome.leftOutcomeObject) outcome.leftOutcomeObject.SetActive(false);
-        if (outcome.rightOutcomeObject) outcome.rightOutcomeObject.SetActive(false);
-
-        switch (choice)
-        {
-            case FlashbackChoice.ChoseLeft:
-                if (outcome.leftOutcomeObject) outcome.leftOutcomeObject.SetActive(true);
-                break;
-            case FlashbackChoice.ChoseRight:
-                if (outcome.rightOutcomeObject) outcome.rightOutcomeObject.SetActive(true);
-                break;
-        }
+        var o = levelOutcomes.Find(x => x.levelID == levelID);
+        if (o == null) return;
+        if (o.leftOutcomeObject) o.leftOutcomeObject.SetActive(choice == FlashbackChoice.ChoseLeft);
+        if (o.rightOutcomeObject) o.rightOutcomeObject.SetActive(choice == FlashbackChoice.ChoseRight);
     }
 }

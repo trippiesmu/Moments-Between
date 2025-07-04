@@ -1,38 +1,44 @@
 // InteractionSystem.cs
-// Erlaubt dem Spieler, im Hub-Szene mit Objekten zu interagieren und eine Dialogsequenz zu starten.
 using UnityEngine;
 using TMPro;
 
 public class InteractionSystem : MonoBehaviour
 {
-    [Header("Interaction Settings")]
     public float interactionDistance = 3f;
     public LayerMask interactableLayer;
     public TextMeshProUGUI promptText;
+    public Camera playerCamera;
 
-    private DialogueTrigger currentDialogueTrigger;
+    private DialogueTrigger currentDT;
+
+    void Start()
+    {
+        if (promptText != null) promptText.gameObject.SetActive(false);
+        if (playerCamera == null) playerCamera = Camera.main;
+    }
 
     void Update()
     {
-        Ray ray = new Ray(Camera.main.transform.position, Camera.main.transform.forward);
-        if (Physics.Raycast(ray, out RaycastHit hit, interactionDistance, interactableLayer))
+        if (playerCamera == null) return;
+        Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
+        if (Physics.Raycast(ray, out var hit, interactionDistance, interactableLayer)
+            && hit.collider.TryGetComponent(out DialogueTrigger dt))
         {
-            var dt = hit.collider.GetComponent<DialogueTrigger>();
-            if (dt != null)
+            currentDT = dt;
+            if (promptText != null && !promptText.gameObject.activeSelf)
             {
-                promptText.gameObject.SetActive(true);
                 promptText.text = "Press E to interact";
-                currentDialogueTrigger = dt;
-
-                if (Input.GetKeyDown(KeyCode.E))
-                {
-                    promptText.gameObject.SetActive(false);
-                    currentDialogueTrigger.TriggerDialogue();
-                }
-                return;
+                promptText.gameObject.SetActive(true);
             }
+            if (Input.GetKeyDown(KeyCode.E))
+            {
+                promptText.gameObject.SetActive(false);
+                currentDT.TriggerDialogue();
+            }
+            return;
         }
-        promptText.gameObject.SetActive(false);
-        currentDialogueTrigger = null;
+        if (promptText != null && promptText.gameObject.activeSelf)
+            promptText.gameObject.SetActive(false);
+        currentDT = null;
     }
 }

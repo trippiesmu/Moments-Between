@@ -8,6 +8,15 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/Hubscene.unity
     guid: 54e9644b66e21b441b9a6eb04b6dad58
+  - enabled: 1
+    path: Assets/Scenes/Level 1.unity
+    guid: ed7b57224dbc62e4cae3f4dc98531d04
+  - enabled: 1
+    path: Assets/Scenes/Level 2.unity
+    guid: 5363c4650c006d0469bf3eacd9da8533
+  - enabled: 1
+    path: Assets/Scenes/Level 3.unity
+    guid: d18950494bca4b148941c2c2741befef
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0

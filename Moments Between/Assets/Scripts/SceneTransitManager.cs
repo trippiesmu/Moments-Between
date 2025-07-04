@@ -1,9 +1,12 @@
 // SceneTransitionManager.cs
-// Verantwortlich fürs Laden und Zurückkehren zwischen Szenen.
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.Collections;
 
+/// <summary>
+/// Einmal in der Hub-Szene an ein GameObject hängen (z.B. "_Managers_").
+/// Wird beim Laden des Spiels initialisiert und überlebt Szenewechsel.
+/// </summary>
 public class SceneTransitionManager : MonoBehaviour
 {
     public static SceneTransitionManager Instance { get; private set; }
@@ -19,19 +22,17 @@ public class SceneTransitionManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void LoadFlashback(string flashbackSceneName)
-    {
-        StartCoroutine(LoadSceneAsync(flashbackSceneName));
-    }
+    /// <summary>Flashback-Szene laden</summary>
+    public void LoadFlashback(string sceneName)
+        => StartCoroutine(LoadSceneAsync(sceneName));
 
-    public void ReturnToHub(string hubSceneName)
-    {
-        StartCoroutine(LoadSceneAsync(hubSceneName));
-    }
+    /// <summary>Optional: Zur Hub zurückkehren</summary>
+    public void ReturnToHub(string sceneName)
+        => StartCoroutine(LoadSceneAsync(sceneName));
 
-    private IEnumerator LoadSceneAsync(string sceneName)
+    private IEnumerator LoadSceneAsync(string name)
     {
-        var asyncOp = SceneManager.LoadSceneAsync(sceneName);
-        while (!asyncOp.isDone) yield return null;
+        var op = SceneManager.LoadSceneAsync(name);
+        while (!op.isDone) yield return null;
     }
 }
