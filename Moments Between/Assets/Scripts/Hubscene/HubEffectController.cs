@@ -1,35 +1,86 @@
 // HubEffectController.cs
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using System.Collections.Generic;
 
-[System.Serializable]
-public class LevelOutcome
-{
-    public string levelID;
-    public GameObject straightOutcome;
-    public GameObject rightOutcome;
-}
-
+/// <summary>
+/// Persistenter Controller, der nach jedem Laden der Hub-Szene
+/// alle OutcomeObject-Marker (auch inaktive) sammelt und entsprechend
+/// der gespeicherten Choice aktiviert/deaktiviert.
+/// </summary>
 public class HubEffectController : MonoBehaviour
 {
-    public List<LevelOutcome> outcomes;
+    public static HubEffectController Instance { get; private set; }
+
+    [Tooltip("Exakter Name deiner Hub-Szene, wie in Build Settings")]
+    public string hubSceneName;
+
+    // levelID → (leftObj, rightObj)
+    private Dictionary<string, (GameObject left, GameObject right)> outcomes
+        = new Dictionary<string, (GameObject, GameObject)>();
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
 
     void OnEnable()
     {
-        GameManager.Instance.OnChoiceChanged += Apply;
-        foreach (var o in outcomes)
-            Apply(o.levelID, GameManager.Instance.GetChoice(o.levelID));
+        SceneManager.sceneLoaded += OnSceneLoaded;
     }
+
     void OnDisable()
     {
-        if (GameManager.Instance != null)
-            GameManager.Instance.OnChoiceChanged -= Apply;
+        SceneManager.sceneLoaded -= OnSceneLoaded;
     }
-    void Apply(string levelID, FlashbackChoice choice)
+
+    private void OnSceneLoaded(Scene scene, LoadSceneMode mode)
     {
-        var o = outcomes.Find(x => x.levelID == levelID);
-        if (o == null) return;
-        o.straightOutcome?.SetActive(choice == FlashbackChoice.None);
-        o.rightOutcome?.SetActive(choice == FlashbackChoice.ChoseRight);
+        // nur in der Hub-Szene reagieren
+        if (scene.name != hubSceneName) return;
+
+        BuildOutcomeMap();    // sammelt auch inaktive Marker
+        ApplyAllEffects();    // aktiviert/deaktiviert korrekt
+    }
+
+    private void BuildOutcomeMap()
+    {
+        outcomes.Clear();
+
+        // FindObjectsOfTypeAll findet auch deaktivierte GameObjects
+        foreach (var marker in Resources.FindObjectsOfTypeAll<OutcomeObject>())
+        {
+            // nur Marker in der aktuell geladenen Hub-Szene berücksichtigen
+            if (marker.gameObject.scene.name != hubSceneName) continue;
+
+            if (!outcomes.ContainsKey(marker.levelID))
+                outcomes[marker.levelID] = (null, null);
+
+            var tuple = outcomes[marker.levelID];
+            if (marker.isLeftOutcome)
+                tuple.left = marker.gameObject;
+            else
+                tuple.right = marker.gameObject;
+            outcomes[marker.levelID] = tuple;
+        }
+    }
+
+    private void ApplyAllEffects()
+    {
+        foreach (var kvp in outcomes)
+        {
+            string levelID = kvp.Key;
+            FlashbackChoice choice = GameManager.Instance.GetChoice(levelID);
+
+            var (leftObj, rightObj) = kvp.Value;
+            if (leftObj  != null) leftObj .SetActive(choice == FlashbackChoice.None);
+            if (rightObj != null) rightObj.SetActive(choice == FlashbackChoice.ChoseRight);
+        }
     }
 }
