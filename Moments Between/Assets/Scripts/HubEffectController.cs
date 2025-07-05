@@ -1,38 +1,35 @@
 // HubEffectController.cs
 using UnityEngine;
-using System;
 using System.Collections.Generic;
 
-[Serializable]
+[System.Serializable]
 public class LevelOutcome
 {
     public string levelID;
-    public GameObject leftOutcomeObject;
-    public GameObject rightOutcomeObject;
+    public GameObject straightOutcome;
+    public GameObject rightOutcome;
 }
 
 public class HubEffectController : MonoBehaviour
 {
-    public List<LevelOutcome> levelOutcomes = new List<LevelOutcome>();
+    public List<LevelOutcome> outcomes;
 
     void OnEnable()
     {
-        GameManager.Instance.OnFlashbackChoiceChanged += Apply;
-        foreach (var o in levelOutcomes)
-            Apply(o.levelID, GameManager.Instance.GetFlashbackChoice(o.levelID));
+        GameManager.Instance.OnChoiceChanged += Apply;
+        foreach (var o in outcomes)
+            Apply(o.levelID, GameManager.Instance.GetChoice(o.levelID));
     }
-
     void OnDisable()
     {
         if (GameManager.Instance != null)
-            GameManager.Instance.OnFlashbackChoiceChanged -= Apply;
+            GameManager.Instance.OnChoiceChanged -= Apply;
     }
-
-    private void Apply(string levelID, FlashbackChoice choice)
+    void Apply(string levelID, FlashbackChoice choice)
     {
-        var o = levelOutcomes.Find(x => x.levelID == levelID);
+        var o = outcomes.Find(x => x.levelID == levelID);
         if (o == null) return;
-        if (o.leftOutcomeObject) o.leftOutcomeObject.SetActive(choice == FlashbackChoice.ChoseLeft);
-        if (o.rightOutcomeObject) o.rightOutcomeObject.SetActive(choice == FlashbackChoice.ChoseRight);
+        o.straightOutcome?.SetActive(choice == FlashbackChoice.None);
+        o.rightOutcome?.SetActive(choice == FlashbackChoice.ChoseRight);
     }
 }

@@ -3,13 +3,13 @@ using UnityEngine;
 using System;
 using System.Collections.Generic;
 
-public enum FlashbackChoice { None, ChoseLeft, ChoseRight }
+public enum FlashbackChoice { None, ChoseRight }
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
-    private Dictionary<string, FlashbackChoice> flashbackChoices = new Dictionary<string, FlashbackChoice>();
-    public event Action<string, FlashbackChoice> OnFlashbackChoiceChanged;
+    private Dictionary<string, FlashbackChoice> choices = new Dictionary<string, FlashbackChoice>();
+    public event Action<string, FlashbackChoice> OnChoiceChanged;
 
     void Awake()
     {
@@ -18,12 +18,12 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    public void SetFlashbackChoice(string levelID, FlashbackChoice choice)
+    public void SetChoice(string levelID, FlashbackChoice choice)
     {
-        flashbackChoices[levelID] = choice;
-        OnFlashbackChoiceChanged?.Invoke(levelID, choice);
+        choices[levelID] = choice;
+        OnChoiceChanged?.Invoke(levelID, choice);
     }
 
-    public FlashbackChoice GetFlashbackChoice(string levelID)
-        => flashbackChoices.TryGetValue(levelID, out var c) ? c : FlashbackChoice.None;
+    public FlashbackChoice GetChoice(string levelID)
+        => choices.TryGetValue(levelID, out var c) ? c : FlashbackChoice.None;
 }
