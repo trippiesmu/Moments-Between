@@ -13,17 +13,31 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
         DontDestroyOnLoad(gameObject);
     }
 
+    /// <summary>Speichert die Entscheidung oder markiert das Level als gespielt.</summary>
     public void SetChoice(string levelID, FlashbackChoice choice)
     {
         choices[levelID] = choice;
         OnChoiceChanged?.Invoke(levelID, choice);
     }
 
+    /// <summary>Gibt zurück, ob dieses Level schon einmal gespielt/entschieden wurde.</summary>
+    public bool HasChoice(string levelID)
+    {
+        return choices.ContainsKey(levelID);
+    }
+
+    /// <summary>Liefert die gespeicherte Wahl (oder None, falls nie gesetzt).</summary>
     public FlashbackChoice GetChoice(string levelID)
-        => choices.TryGetValue(levelID, out var c) ? c : FlashbackChoice.None;
+    {
+        return choices.TryGetValue(levelID, out var c) ? c : FlashbackChoice.None;
+    }
 }

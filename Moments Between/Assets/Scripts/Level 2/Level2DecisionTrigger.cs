@@ -1,37 +1,43 @@
-// Level2DecisionTrigger.cs (angepasst für TextMeshProUGUI)
+// Level2DecisionTrigger.cs
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
+/// <summary>
+/// Finale Entscheidung in Level 2: Zeitlupe, Choice speichern, dann zurück in die Hub.
+/// </summary>
+[RequireComponent(typeof(Collider))]
 public class Level2DecisionTrigger : MonoBehaviour
 {
     [Header("UI References")]
     public GameObject decisionUI;
-    public Button buttonLeft;
-    public Button buttonRight;
+    public Button buttonLeft;            // “Erzähl’s dem Boss” = False
+    public Button buttonRight;           // “Schweig”            = True
     public TextMeshProUGUI questionText;
 
-    [Header("Decision Settings")]
+    [Header("Settings")]
     public float slowTimeScale = 0.5f;
     public string levelID = "Level2";
     public string hubSceneName;
 
-    private bool decisionActive = false;
+    private bool decisionActive;
 
     void Start()
     {
-        decisionUI.SetActive(false);
-        buttonLeft.onClick.AddListener(() => OnDecision(false));  // Links = nicht erzählen
-        buttonRight.onClick.AddListener(() => OnDecision(true)); // Rechts = erzählen
+        if (decisionUI != null) decisionUI.SetActive(false);
+
+        buttonLeft.onClick.AddListener(() => OnDecision(false));
+        buttonRight.onClick.AddListener(() => OnDecision(true));
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
+
+        decisionActive = true;
         Time.timeScale = slowTimeScale;
         Time.fixedDeltaTime = 0.02f * slowTimeScale;
         decisionUI.SetActive(true);
-        decisionActive = true;
     }
 
     void Update()
@@ -45,17 +51,22 @@ public class Level2DecisionTrigger : MonoBehaviour
     {
         decisionActive = false;
         decisionUI.SetActive(false);
+
+        // Zeitlupe zurücksetzen
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
 
-        // Entscheidung speichern
-        FlashbackChoice choice = choseRight 
+        // Choice speichern (None = Links, ChoseRight = Rechts)
+        var choice = choseRight 
             ? FlashbackChoice.ChoseRight 
             : FlashbackChoice.None;
         GameManager.Instance.SetChoice(levelID, choice);
 
         // Zurück in die Hub
-        SceneTransitionManager.Instance.LoadHub(hubSceneName);
-        Destroy(gameObject);
+        SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
+
+        // Damit der Trigger nicht erneut feuert
+        GetComponent<Collider>().enabled = false;
+        enabled = false;
     }
 }
