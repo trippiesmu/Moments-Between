@@ -9,28 +9,25 @@ public class FirstPersonController : MonoBehaviour
     public float sprintSpeed = 4f;
     public float mouseSensitivity = 100f;
 
-    [Header("ViewBobbing-Einstellungen")]
+    [Header("ViewBobbing-Einstellungen (optional)")]
     public bool enableViewBobbing = true;
     public float bobbingSpeed = 5f;
     public float bobbingAmount = 0.05f;
 
-    [Header("Weitere Einstellungen")]
+    [Header("Referenzen")]
     public Transform playerCamera;
     public float verticalRotationLimit = 80f;
 
     private CharacterController characterController;
     private float xRotation = 0f;
-    private float defaultCameraLocalPosY;
-    private float bobbingTimer = 0f;
+    private float defaultCameraY;
+    private float bobTimer = 0f;
 
     void Start()
     {
         characterController = GetComponent<CharacterController>();
-
-        if (!playerCamera)
-            playerCamera = Camera.main.transform;
-
-        defaultCameraLocalPosY = playerCamera.localPosition.y;
+        if (playerCamera == null) playerCamera = Camera.main.transform;
+        defaultCameraY = playerCamera.localPosition.y;
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
@@ -48,49 +45,47 @@ public class FirstPersonController : MonoBehaviour
         transform.Rotate(Vector3.up * mouseX);
 
         float mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
-        xRotation -= mouseY;
-        xRotation = Mathf.Clamp(xRotation, -verticalRotationLimit, verticalRotationLimit);
-
+        xRotation = Mathf.Clamp(xRotation - mouseY, -verticalRotationLimit, verticalRotationLimit);
         playerCamera.localRotation = Quaternion.Euler(xRotation, 0f, 0f);
     }
 
     void HandleMovement()
     {
+        // Wenn Dialog aktiv → keine Bewegung
+        if (DialogueTrigger.dialogueActive) return;
+
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
-        float currentSpeed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
-
+        float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
-        characterController.SimpleMove(move * currentSpeed);
+        characterController.SimpleMove(move * speed);
     }
 
     void HandleViewBobbing()
     {
         if (!enableViewBobbing)
         {
-            Vector3 camPos = playerCamera.localPosition;
-            camPos.y = defaultCameraLocalPosY;
-            playerCamera.localPosition = camPos;
+            var p = playerCamera.localPosition;
+            p.y = defaultCameraY;
+            playerCamera.localPosition = p;
             return;
         }
 
-        bool isMoving = characterController.velocity.magnitude > 0.1f;
-
-        if (isMoving)
+        bool moving = characterController.velocity.magnitude > 0.1f;
+        if (moving)
         {
-            bobbingTimer += Time.deltaTime * bobbingSpeed;
-            float bobOffset = Mathf.Sin(bobbingTimer) * bobbingAmount;
-
-            Vector3 camPos = playerCamera.localPosition;
-            camPos.y = defaultCameraLocalPosY + bobOffset;
-            playerCamera.localPosition = camPos;
+            bobTimer += Time.deltaTime * bobbingSpeed;
+            float offset = Mathf.Sin(bobTimer) * bobbingAmount;
+            var p = playerCamera.localPosition;
+            p.y = defaultCameraY + offset;
+            playerCamera.localPosition = p;
         }
         else
         {
-            bobbingTimer = 0f;
-            Vector3 camPos = playerCamera.localPosition;
-            camPos.y = defaultCameraLocalPosY;
-            playerCamera.localPosition = camPos;
+            bobTimer = 0f;
+            var p = playerCamera.localPosition;
+            p.y = defaultCameraY;
+            playerCamera.localPosition = p;
         }
     }
 }

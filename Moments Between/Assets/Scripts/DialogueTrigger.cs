@@ -1,26 +1,25 @@
 // DialogueTrigger.cs
-// Steuert Dialog mit Typewriter-Effekt und lädt danach direkt die konfigurierte Flashback-Szene.
 using UnityEngine;
 using TMPro;
 using System.Collections;
 
 public class DialogueTrigger : MonoBehaviour
 {
+    public static bool dialogueActive = false;
+
     [Header("Dialogue Lines")]
     [TextArea] public string[] lines;
 
     [Header("UI References")]
-    public GameObject dialogueUI;             // Panel mit TMP-Text + Next-Hinweis
+    public GameObject dialogueUI;
     public TextMeshProUGUI dialogueText;
     public float typingSpeed = 0.05f;
 
     [Header("Scene Configuration")]
-    [Tooltip("Name der Flashback-Szene, exakt so wie in Build Settings")]
     public string flashbackSceneName;
 
     private int idx;
     private bool isTyping;
-    private bool active;
 
     void Start()
     {
@@ -28,52 +27,43 @@ public class DialogueTrigger : MonoBehaviour
             dialogueUI.SetActive(false);
     }
 
-    void Update()
-    {
-        if (!active) return;
-        if (Input.GetKeyDown(KeyCode.E))
-            Advance();
-    }
-
-    /// <summary>
-    /// Wird vom InteractionSystem aufgerufen, wenn E gedrückt wurde.
-    /// </summary>
     public void TriggerDialogue()
     {
-        if (lines == null || lines.Length == 0)
-        {
-            LoadFlashback();
-            return;
-        }
+        dialogueActive = true;
         idx = 0;
-        active = true;
         dialogueUI?.SetActive(true);
         StartCoroutine(TypeLine(lines[idx]));
+    }
+
+    void Update()
+    {
+        if (!dialogueActive) return;
+        if (Input.GetKeyDown(KeyCode.E))
+            Advance();
     }
 
     private void Advance()
     {
         if (isTyping)
         {
-            // Tippeffekt abbrechen und komplette Zeile anzeigen
             StopAllCoroutines();
             dialogueText.text = lines[idx];
             isTyping = false;
         }
+        else if (++idx < lines.Length)
+        {
+            StartCoroutine(TypeLine(lines[idx]));
+        }
         else
         {
-            idx++;
-            if (idx < lines.Length)
-                StartCoroutine(TypeLine(lines[idx]));
-            else
-                LoadFlashback();
+            EndDialogueAndLoad();
         }
     }
 
     private IEnumerator TypeLine(string line)
     {
         isTyping = true;
-        dialogueText.text = string.Empty;
+        dialogueText.text = "";
         foreach (char c in line)
         {
             dialogueText.text += c;
@@ -82,14 +72,10 @@ public class DialogueTrigger : MonoBehaviour
         isTyping = false;
     }
 
-    private void LoadFlashback()
+    private void EndDialogueAndLoad()
     {
-        // Dialog-UI ausblenden
         dialogueUI?.SetActive(false);
-        active = false;
-
-        // Flashback-Level laden
-        if (!string.IsNullOrWhiteSpace(flashbackSceneName))
-            SceneTransitionManager.Instance.LoadFlashback(flashbackSceneName);
+        dialogueActive = false;
+        SceneTransitionManager.Instance.LoadFlashback(flashbackSceneName);
     }
 }
