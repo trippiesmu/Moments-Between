@@ -1,4 +1,5 @@
 // PatientDialogueTrigger.cs
+// Dialog-Script bleibt auf dem Character-Mesh, entfernt kein GameObject mehr
 using UnityEngine;
 using TMPro;
 using System.Collections;
@@ -7,41 +8,78 @@ using System.Collections;
 public class PatientDialogueTrigger : MonoBehaviour
 {
     [Header("Patient Settings")]
-    [Tooltip("ID: 'A' oder 'B'")]
-    public string patientID;
-    public string[] lines;
+    public string patientID;              // "A" oder "B"
+    [TextArea] public string[] lines;     // Kurze Sätze (4–5 pro Patient)
 
-    [Header("UI")]
-    public GameObject dialogueUI;           // Panel mit TMP-Text
+    [Header("UI References")]
+    [Tooltip("Panel mit 'Press E to talk'-Hinweis")]
+    public GameObject promptUI;
+    [Tooltip("Text im Prompt-Panel")]
+    public TextMeshProUGUI promptText;
+    [Tooltip("Panel mit Dialog-Text")]
+    public GameObject dialogueUI;
+    [Tooltip("Text im Dialog-Panel")]
     public TextMeshProUGUI dialogueText;
     public float typingSpeed = 0.05f;
 
-    private int idx;
-    private bool isTyping, active;
+    bool playerInRange = false;
+    bool active = false;
+    int idx = 0;
+    bool isTyping = false;
 
     void Start()
     {
-        dialogueUI?.SetActive(false);
+        if (promptUI    != null) promptUI   .SetActive(false);
+        if (dialogueUI  != null) dialogueUI .SetActive(false);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        if (active || !other.CompareTag("Player")) return;
-        active = true;
-        idx = 0;
-        dialogueUI.SetActive(true);
-        DialogueTrigger.dialogueActive = true;  // block Movement/Prompt
-        StartCoroutine(TypeLine(lines[idx]));
+        if (!active && other.CompareTag("Player"))
+        {
+            playerInRange = true;
+            if (promptUI != null)
+            {
+                promptUI.SetActive(true);
+                promptText.text = "Press E to talk";
+            }
+        }
+    }
+
+    void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            playerInRange = false;
+            if (promptUI != null)
+                promptUI.SetActive(false);
+        }
     }
 
     void Update()
     {
-        if (!active) return;
-        if (Input.GetKeyDown(KeyCode.E))
-            Advance();
+        // Starts dialog
+        if (playerInRange && !active && Input.GetKeyDown(KeyCode.E))
+        {
+            if (promptUI != null) promptUI.SetActive(false);
+            BeginDialogue();
+        }
+
+        // Continues dialog
+        if (active && Input.GetKeyDown(KeyCode.E))
+            AdvanceDialogue();
     }
 
-    void Advance()
+    void BeginDialogue()
+    {
+        active = true;
+        DialogueTrigger.dialogueActive = true; // block Movement + Prompt
+        idx = 0;
+        if (dialogueUI != null) dialogueUI.SetActive(true);
+        StartCoroutine(TypeLine(lines[idx]));
+    }
+
+    void AdvanceDialogue()
     {
         if (isTyping)
         {
@@ -76,10 +114,16 @@ public class PatientDialogueTrigger : MonoBehaviour
 
     void EndDialogue()
     {
-        dialogueUI.SetActive(false);
+        if (dialogueUI != null) dialogueUI.SetActive(false);
         DialogueTrigger.dialogueActive = false;
-        // Manager benachrichtigen
+        active = false;
+
+        // Registriere beim Manager
         Level3Manager.Instance.RegisterDialogue(patientID);
-        Destroy(gameObject);
+
+        // Collider und dieses Script deaktivieren, aber Mesh bleibt erhalten
+        var col = GetComponent<Collider>();
+        if (col != null) col.enabled = false;
+        this.enabled = false;
     }
 }
