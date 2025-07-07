@@ -3,16 +3,13 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
-/// <summary>
-/// Finale Entscheidung in Level 2: Zeitlupe, Choice speichern, dann zurück in die Hub.
-/// </summary>
 [RequireComponent(typeof(Collider))]
 public class Level2DecisionTrigger : MonoBehaviour
 {
     [Header("UI References")]
     public GameObject decisionUI;
-    public Button buttonLeft;            // “Erzähl’s dem Boss” = False
-    public Button buttonRight;           // “Schweig”            = True
+    public Button buttonLeft;   // Erzähl’s dem Boss = ChoseLeft
+    public Button buttonRight;  // Schweig = ChoseRight
     public TextMeshProUGUI questionText;
 
     [Header("Settings")]
@@ -25,7 +22,6 @@ public class Level2DecisionTrigger : MonoBehaviour
     void Start()
     {
         if (decisionUI != null) decisionUI.SetActive(false);
-
         buttonLeft.onClick.AddListener(() => OnDecision(false));
         buttonRight.onClick.AddListener(() => OnDecision(true));
     }
@@ -33,7 +29,6 @@ public class Level2DecisionTrigger : MonoBehaviour
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-
         decisionActive = true;
         Time.timeScale = slowTimeScale;
         Time.fixedDeltaTime = 0.02f * slowTimeScale;
@@ -56,16 +51,19 @@ public class Level2DecisionTrigger : MonoBehaviour
         Time.timeScale = 1f;
         Time.fixedDeltaTime = 0.02f;
 
-        // Choice speichern (None = Links, ChoseRight = Rechts)
+        // Mapping: false = ChoseLeft, true = ChoseRight
         var choice = choseRight 
             ? FlashbackChoice.ChoseRight 
-            : FlashbackChoice.None;
+            : FlashbackChoice.ChoseLeft;
         GameManager.Instance.SetChoice(levelID, choice);
 
-        // Zurück in die Hub
-        SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
+        // zurück in die Hub
+        if (SceneTransitionManager.Instance != null)
+            SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
+        else
+            Debug.LogError("Kein SceneTransitionManager gefunden.");
 
-        // Damit der Trigger nicht erneut feuert
+        // Trigger deaktivieren
         GetComponent<Collider>().enabled = false;
         enabled = false;
     }

@@ -1,14 +1,39 @@
 // OutcomeObject.cs
 using UnityEngine;
 
-/// <summary>
-/// Marker für alle Hub-Effekt-Objekte (Left/Right).
-/// </summary>
+[RequireComponent(typeof(Collider))]
 public class OutcomeObject : MonoBehaviour
 {
     [Tooltip("ID des Flashback-Levels, z.B. 'Level1', 'Level2'…")]
     public string levelID;
 
-    [Tooltip("True = Left-Outcome (None), False = Right-Outcome (ChoseRight)")]
-    public bool isLeftOutcome;
+    [Tooltip("Outcome-Typ: ChoseLeft oder ChoseRight")]
+    public FlashbackChoice outcomeType;
+
+    void Start()
+    {
+        // standardmäßig ausblenden
+        gameObject.SetActive(false);
+
+        // falls die Choice schon existiert, nur das richtige Outcome zeigen
+        if (GameManager.Instance.HasChoice(levelID))
+        {
+            var choice = GameManager.Instance.GetChoice(levelID);
+            gameObject.SetActive(choice == outcomeType);
+        }
+
+        GameManager.Instance.OnChoiceChanged += HandleChoiceChanged;
+    }
+
+    private void HandleChoiceChanged(string id, FlashbackChoice choice)
+    {
+        if (id != levelID) return;
+        gameObject.SetActive(choice == outcomeType);
+    }
+
+    void OnDestroy()
+    {
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnChoiceChanged -= HandleChoiceChanged;
+    }
 }

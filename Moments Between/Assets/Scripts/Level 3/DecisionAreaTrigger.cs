@@ -6,19 +6,17 @@ using UnityEngine.SceneManagement;
 public class DecisionAreaTrigger : MonoBehaviour
 {
     [Header("Level & Hub")]
-    [Tooltip("ID für GameManager.SetChoice")]
     public string levelID = "Level3";
-    [Tooltip("Exakter Name der Hub-Szene")]
     public string hubSceneName = "HubScene";
 
     [Header("Choice")]
-    [Tooltip("True = Bett A (None), False = Bett B (ChoseRight)")]
+    [Tooltip("True = Bett A (ChoseLeft), False = Bett B (ChoseRight)")]
     public bool isBedA;
 
     [Header("Optionaler Marker")]
     public GameObject highlightObject;
 
-    Collider col;
+    private Collider col;
 
     void Awake()
     {
@@ -34,7 +32,6 @@ public class DecisionAreaTrigger : MonoBehaviour
 
     void OnEnable()
     {
-        // nur aufs statische Event hören – kein Level3Manager mehr hier
         IntermediateTrigger.OnDecisionPhaseReady += EnableArea;
     }
 
@@ -43,7 +40,7 @@ public class DecisionAreaTrigger : MonoBehaviour
         IntermediateTrigger.OnDecisionPhaseReady -= EnableArea;
     }
 
-    void EnableArea()
+    private void EnableArea()
     {
         col.enabled = true;
         if (highlightObject) highlightObject.SetActive(true);
@@ -53,20 +50,17 @@ public class DecisionAreaTrigger : MonoBehaviour
     {
         if (!col.enabled || !other.CompareTag("Player")) return;
 
-        // Entscheidung speichern
-        var choice = isBedA
-            ? FlashbackChoice.None
+        // Mapping: Bett A = ChoseLeft, Bett B = ChoseRight
+        var choice = isBedA 
+            ? FlashbackChoice.ChoseLeft 
             : FlashbackChoice.ChoseRight;
         GameManager.Instance.SetChoice(levelID, choice);
 
-        // genau wie in den anderen Levels: zurück in die Hub
+        // zurück in die Hub
         if (SceneTransitionManager.Instance != null)
             SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
         else
-        {
-            Debug.LogError($"DecisionAreaTrigger: Kein SceneTransitionManager, lade Hub direkt.");
             SceneManager.LoadScene(hubSceneName);
-        }
 
         // Einmal-Trigger
         col.enabled = false;
