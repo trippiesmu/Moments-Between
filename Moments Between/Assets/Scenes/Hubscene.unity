@@ -126317,6 +126317,10 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
+    - target: {fileID: 2138396185352131146, guid: bfdd7696592da8b40add9c97a7f4c1e9, type: 3}
+      propertyPath: m_TagString
+      value: Player
+      objectReference: {fileID: 0}
     - target: {fileID: 4723908358872697855, guid: bfdd7696592da8b40add9c97a7f4c1e9, type: 3}
       propertyPath: promptUI
       value: 
@@ -127428,10 +127432,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 658468b0bc1342e43bb6e26959b804b5, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  levelIDs:
-  - Level1
-  - Level2
-  - Level3
+  requiredChoices: 3
   effectPrefab: {fileID: 1459862227383078, guid: cc461484bcafc664fb68be84c1fc6860, type: 3}
   effectOffset: {x: 0, y: 1.5, z: 0}
   hubSceneName: Hubscene
@@ -135177,8 +135178,8 @@ BoxCollider:
   m_ProvidesContacts: 0
   m_Enabled: 1
   serializedVersion: 3
-  m_Size: {x: 1.6930759, y: 2.2243478, z: 0.82910645}
-  m_Center: {x: -0.5853981, y: 1.1121739, z: -0.46868727}
+  m_Size: {x: 2.517815, y: 2.2243478, z: 1.693043}
+  m_Center: {x: -0.54726124, y: 1.1121739, z: -0.9006631}
 --- !u!1001 &1382145685
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -168206,6 +168207,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 931712801}
     m_Modifications:
+    - target: {fileID: 1101304234216274, guid: b1177e18354fd6d47a8cefb32959d8aa, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
+    - target: {fileID: 1762468548140348, guid: b1177e18354fd6d47a8cefb32959d8aa, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4184692880760204, guid: b1177e18354fd6d47a8cefb32959d8aa, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -168244,7 +168253,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4781992175852160, guid: b1177e18354fd6d47a8cefb32959d8aa, type: 3}
       propertyPath: m_LocalPosition.x
-      value: -0.757
+      value: -0.745
       objectReference: {fileID: 0}
     - target: {fileID: 4781992175852160, guid: b1177e18354fd6d47a8cefb32959d8aa, type: 3}
       propertyPath: m_LocalPosition.y

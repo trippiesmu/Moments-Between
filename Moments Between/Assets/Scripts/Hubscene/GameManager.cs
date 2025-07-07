@@ -22,22 +22,25 @@ public class GameManager : MonoBehaviour
         DontDestroyOnLoad(gameObject);
     }
 
-    /// <summary>Speichert die Entscheidung oder markiert das Level als gespielt.</summary>
+    /// <summary>Speichert die Entscheidung bzw. markiert Level als gespielt.</summary>
     public void SetChoice(string levelID, FlashbackChoice choice)
     {
         choices[levelID] = choice;
         OnChoiceChanged?.Invoke(levelID, choice);
     }
 
-    /// <summary>Gibt zurück, ob dieses Level schon einmal gespielt/entschieden wurde.</summary>
+    /// <summary>Gibt true, wenn dieses Level schon einmal gespielt wurde.</summary>
     public bool HasChoice(string levelID)
     {
         return choices.ContainsKey(levelID);
     }
 
-    /// <summary>Liefert die gespeicherte Wahl (oder None, falls nie gesetzt).</summary>
+    /// <summary>Liefert gespeicherte Wahl (oder None, falls nie gesetzt).</summary>
     public FlashbackChoice GetChoice(string levelID)
     {
         return choices.TryGetValue(levelID, out var c) ? c : FlashbackChoice.None;
     }
+
+    /// <summary>Anzahl aller gespeicherten Entscheidungen/gespielten Level.</summary>
+    public int ChoiceCount => choices.Count;
 }

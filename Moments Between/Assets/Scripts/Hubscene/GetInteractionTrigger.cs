@@ -6,25 +6,25 @@ using TMPro;
 public class GateInteractionTrigger : MonoBehaviour
 {
     [Header("UI References")]
-    [Tooltip("Press E to enter…")]
-    public GameObject promptUI;
+    public GameObject promptUI;           // Panel mit „Press E to enter“
     public TextMeshProUGUI promptText;
 
     bool playerInRange;
 
     void Start()
     {
-        if (promptUI != null) promptUI.SetActive(false);
+        if (promptUI != null)
+            promptUI.SetActive(false);
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (!other.CompareTag("Player")) return;
-        // Nur anzeigen, wenn Gate auch wirklich freigeschaltet ist
-        if (FinalGateController.Instance != null && FinalGateController.Instance.GetComponent<Collider>().enabled)
+        // OnTriggerEnter feuert nur, wenn col.enabled == true
+        playerInRange = true;
+        if (promptUI != null)
         {
-            playerInRange = true;
-            promptUI?.SetActive(true);
+            promptUI.SetActive(true);
             promptText.text = "Press E to enter";
         }
     }
