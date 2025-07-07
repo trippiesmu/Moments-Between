@@ -5,88 +5,71 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(Collider))]
 public class DecisionAreaTrigger : MonoBehaviour
 {
-    [Header("Einstellungen")]
+    [Header("Choice Settings")]
+    [Tooltip("Level-ID für GameManager.SetChoice")]
+    public string levelID = "Level3";
+    [Tooltip("Name der Hub-Szene (exakt aus Build Settings)")]
+    public string hubSceneName = "HubScene";
     [Tooltip("True = Bett A (None), False = Bett B (ChoseRight)")]
     public bool isBedA;
-    [Tooltip("ID dieses Levels, z.B. 'Level3'")]
-    public string levelID = "Level3";
-    [Tooltip("Name deiner Hub-Szene exakt wie in den Build Settings")]
-    public string hubSceneName = "HubScene";
 
-    [Header("Visueller Marker")]
-    [Tooltip("GameObject, das unterhalb des Bettes sichtbar wird")]
+    [Header("Optionaler Marker")]
+    [Tooltip("Ein Objekt (z.B. Plane/Icon), das zuerst unsichtbar ist")]
     public GameObject highlightObject;
 
-    Collider col;
+    private Collider col;
 
     void Awake()
     {
         col = GetComponent<Collider>();
         if (col == null)
-            Debug.LogError($"[{name}] DecisionAreaTrigger braucht einen Collider!");
+            Debug.LogError($"{name}: Collider fehlt!");
     }
 
     void Start()
     {
-        // Collider & Marker zunächst deaktivieren
-        if (col != null) col.enabled = false;
-        if (highlightObject != null) highlightObject.SetActive(false);
-        else
-            Debug.LogWarning($"[{name}] highlightObject ist nicht gesetzt!");
+        // Vorab abschalten
+        col.enabled = false;
+        if (highlightObject != null)
+            highlightObject.SetActive(false);
     }
 
     void OnEnable()
     {
-        if (Level3Manager.Instance != null)
-            Level3Manager.Instance.OnReadyToDecide += EnableArea;
-        else
-            Debug.LogError("DecisionAreaTrigger: Level3Manager.Instance ist null!");
+        // Lausche auf den statischen Event aus IntermediateTrigger
+        IntermediateTrigger.OnDecisionPhaseReady += EnableArea;
     }
 
     void OnDisable()
     {
-        if (Level3Manager.Instance != null)
-            Level3Manager.Instance.OnReadyToDecide -= EnableArea;
+        IntermediateTrigger.OnDecisionPhaseReady -= EnableArea;
     }
 
-    void EnableArea()
+    /// <summary>
+    /// Schaltet Collider & Marker frei, wenn IntermediateTrigger feuert.
+    /// </summary>
+    private void EnableArea()
     {
-        if (col != null) col.enabled = true;
-        if (highlightObject != null) highlightObject.SetActive(true);
+        col.enabled = true;
+        if (highlightObject != null)
+            highlightObject.SetActive(true);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Nur reagieren, wenn Collider aktiviert und Spieler
-        if (col == null || !col.enabled) return;
-        if (!other.CompareTag("Player")) return;
+        if (!col.enabled || !other.CompareTag("Player")) return;
 
-        Debug.Log($"[{name}] Player betritt {(isBedA ? "Bett A" : "Bett B")}");
+        // Choice speichern
+        var choice = isBedA ? FlashbackChoice.None : FlashbackChoice.ChoseRight;
+        GameManager.Instance.SetChoice(levelID, choice);
 
-        // Entscheidung speichern
-        var choice = isBedA 
-            ? FlashbackChoice.None 
-            : FlashbackChoice.ChoseRight;
+        // Zur Hub zurück
+        SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
 
-        if (GameManager.Instance != null)
-            GameManager.Instance.SetChoice(levelID, choice);
-        else
-            Debug.LogError("DecisionAreaTrigger: GameManager.Instance ist null!");
-
-        // Zur Hub zurückkehren
-        if (SceneTransitionManager.Instance != null)
-        {
-            SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
-        }
-        else
-        {
-            Debug.LogError("DecisionAreaTrigger: SceneTransitionManager.Instance ist null, lade Hub direkt.");
-            SceneManager.LoadScene(hubSceneName);
-        }
-
-        // Bereich nur einmal nutzbar
+        // Nur einmal nutzbar
         col.enabled = false;
-        if (highlightObject != null) highlightObject.SetActive(false);
+        if (highlightObject != null)
+            highlightObject.SetActive(false);
         enabled = false;
     }
 }

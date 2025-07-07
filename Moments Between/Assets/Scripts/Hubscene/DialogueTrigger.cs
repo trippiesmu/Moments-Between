@@ -1,13 +1,7 @@
-// DialogueTrigger.cs
 using UnityEngine;
 using TMPro;
 using System.Collections;
 
-/// <summary>
-/// Wird an jedes Hub-Objekt gehängt, das per Dialog in ein Level führt.
-/// Deaktiviert sich selbst, sobald das Level bereits einmal gestartet wurde.
-/// </summary>
-[RequireComponent(typeof(Collider))]
 public class DialogueTrigger : MonoBehaviour
 {
     public static bool dialogueActive = false;
@@ -21,7 +15,7 @@ public class DialogueTrigger : MonoBehaviour
     public float typingSpeed = 0.05f;
 
     [Header("Scene Configuration")]
-    [Tooltip("Name der Flashback-Szene, exakt wie in Build Settings.")]
+    [Tooltip("Exakter Name der Flashback-Szene, wie in den Build Settings")]
     public string flashbackSceneName;
 
     private int idx;
@@ -29,24 +23,12 @@ public class DialogueTrigger : MonoBehaviour
 
     void Start()
     {
-        // Wenn dieses Flashback schon gespielt wurde, komplett deaktivieren
-        if (GameManager.Instance.HasChoice(flashbackSceneName))
-        {
-            GetComponent<Collider>().enabled = false;
-            enabled = false;
-            return;
-        }
-
         if (dialogueUI != null)
             dialogueUI.SetActive(false);
     }
 
-    /// <summary>Wird vom InteractionSystem gerufen, wenn der Spieler E drückt.</summary>
     public void TriggerDialogue()
     {
-        if (GameManager.Instance.HasChoice(flashbackSceneName))
-            return; // doppelte Auslösung verhindern
-
         dialogueActive = true;
         idx = 0;
         dialogueUI?.SetActive(true);
@@ -67,8 +49,11 @@ public class DialogueTrigger : MonoBehaviour
             StopAllCoroutines();
             dialogueText.text = lines[idx];
             isTyping = false;
+            return;
         }
-        else if (++idx < lines.Length)
+
+        idx++;
+        if (idx < lines.Length)
         {
             StartCoroutine(TypeLine(lines[idx]));
         }
@@ -82,7 +67,7 @@ public class DialogueTrigger : MonoBehaviour
     {
         isTyping = true;
         dialogueText.text = "";
-        foreach (char c in line)
+        foreach (var c in line)
         {
             dialogueText.text += c;
             yield return new WaitForSeconds(typingSpeed);
@@ -95,10 +80,13 @@ public class DialogueTrigger : MonoBehaviour
         dialogueUI?.SetActive(false);
         dialogueActive = false;
 
-        // Markiere als gespielt (None, da hier keine echte Choice)
-        GameManager.Instance.SetChoice(flashbackSceneName, FlashbackChoice.None);
+        // Debug-Ausgabe, damit du siehst, was geladen wird:
+        Debug.Log($"[DialogueTrigger] Loading flashback scene: '{flashbackSceneName}'");
 
-        // Lade das Flashback-Level
-        SceneTransitionManager.Instance.LoadFlashback(flashbackSceneName);
+        // Hier genau den Inspector-String nutzen:
+        if (SceneTransitionManager.Instance != null)
+            SceneTransitionManager.Instance.LoadFlashback(flashbackSceneName);
+        else
+            Debug.LogError("No SceneTransitionManager instance found!");
     }
 }

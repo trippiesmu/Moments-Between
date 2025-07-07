@@ -59234,6 +59234,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 1918824834}
     m_Modifications:
+    - target: {fileID: 1224132626334536, guid: 21b584a21c83c764e8e180810ce010d0, type: 3}
+      propertyPath: m_Layer
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 4645263293558190, guid: 21b584a21c83c764e8e180810ce010d0, type: 3}
       propertyPath: m_RootOrder
       value: 38
@@ -126058,6 +126062,10 @@ PrefabInstance:
       propertyPath: bobbingAmount
       value: 0.05
       objectReference: {fileID: 0}
+    - target: {fileID: 691660976244316334, guid: bfdd7696592da8b40add9c97a7f4c1e9, type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0.538
+      objectReference: {fileID: 0}
     - target: {fileID: 2138396185352131146, guid: bfdd7696592da8b40add9c97a7f4c1e9, type: 3}
       propertyPath: m_Name
       value: Player
@@ -148271,7 +148279,7 @@ MonoBehaviour:
   dialogueUI: {fileID: 1975830279}
   dialogueText: {fileID: 1569337904}
   typingSpeed: 0.05
-  flashbackSceneName: Level 1
+  flashbackSceneName: Level 3
 --- !u!1001 &1518002151
 PrefabInstance:
   m_ObjectHideFlags: 0
