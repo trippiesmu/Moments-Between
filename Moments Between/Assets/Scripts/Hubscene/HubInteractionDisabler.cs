@@ -1,21 +1,25 @@
 // HubInteractionDisabler.cs
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Läuft beim Hub-Start und deaktiviert alle Hub-Trigger,
-/// deren Flashback bereits gespielt wurde.
-/// </summary>
 public class HubInteractionDisabler : MonoBehaviour
 {
     void Start()
     {
-        var triggers = FindObjectsOfType<DialogueTrigger>();
+        // Alle DialogueTrigger (auch deaktivierte, falls bereits abgeschaltet) finden
+        var triggers = Object.FindObjectsByType<DialogueTrigger>(
+            FindObjectsInactive.Include, 
+            FindObjectsSortMode.None
+        );
+
         foreach (var trig in triggers)
         {
+            // Wenn für diese Szene schon eine Choice existiert...
             if (GameManager.Instance.HasChoice(trig.flashbackSceneName))
             {
-                // Collider & Script aus, so dass InteractionSystem nichts mehr findet
-                trig.GetComponent<Collider>().enabled = false;
+                // Collider & Script deaktivieren
+                var col = trig.GetComponent<Collider>();
+                if (col != null) col.enabled = false;
                 trig.enabled = false;
             }
         }
