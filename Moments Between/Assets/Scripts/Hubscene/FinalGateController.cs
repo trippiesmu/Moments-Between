@@ -1,64 +1,105 @@
 // FinalGateController.cs
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using System;
 
 [RequireComponent(typeof(Collider))]
 public class FinalGateController : MonoBehaviour
 {
+    public static FinalGateController Instance { get; private set; }
+
     [Header("Zu prüfende Level")]
-    [Tooltip("Szenennamen der Flashback-Levels")]
+    [Tooltip("Exakte Szenennamen deiner Flashback-Levels")]
     public string[] levelIDs = { "Level1", "Level2", "Level3" };
 
-    [Header("Visueller Effekt")]
-    [Tooltip("Prefab oder Kind-Object, z.B. leuchtender Rahmen an der Tür")]
-    public GameObject effectObject;
+    [Header("Effekt-Prefab")]
+    [Tooltip("Prefab mit Partikeln/Outline o.ä.")]
+    public GameObject effectPrefab;
+    [Tooltip("Offset relativ zur Position dieses GameObjects")]
+    public Vector3 effectOffset = Vector3.up * 1.5f;
 
     [Header("Szenennamen")]
     [Tooltip("Name der Hub-Szene, exakt wie in Build Settings")]
     public string hubSceneName = "HubScene";
-    [Tooltip("Name der Endszene, die nach allen 3 Levels geladen wird")]
+    [Tooltip("Name der End-Szene, die geladen werden soll")]
     public string endSceneName = "EndScene";
 
-    private Collider col;
+    Collider col;
+    GameObject effectInstance;
+    bool gateEnabled;
 
     void Awake()
     {
+        // Singleton + Persistenz
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+        DontDestroyOnLoad(gameObject);
+
         col = GetComponent<Collider>();
         col.isTrigger = true;
-        // Collider & Effekt initial deaktivieren
         col.enabled = false;
-        if (effectObject != null)
-            effectObject.SetActive(false);
+
+        // Auf Choice-Änderungen und Szene-Wechsel hören
+        GameManager.Instance.OnChoiceChanged += OnChoiceChanged;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded += OnSceneLoaded;
     }
 
-    void Start()
+    void OnDestroy()
     {
-        // Nur in der Hub-Szene prüfen
-        if (SceneManager.GetActiveScene().name == hubSceneName
-            && AllLevelsPlayed())
-        {
-            col.enabled = true;
-            if (effectObject != null)
-                effectObject.SetActive(true);
-        }
+        if (Instance == this) Instance = null;
+        if (GameManager.Instance != null)
+            GameManager.Instance.OnChoiceChanged -= OnChoiceChanged;
+        UnityEngine.SceneManagement.SceneManager.sceneLoaded -= OnSceneLoaded;
     }
 
-    private bool AllLevelsPlayed()
-    {
-        foreach (var id in levelIDs)
-        {
-            if (!GameManager.Instance.HasChoice(id))
-                return false;
-        }
-        return true;
-    }
+    // Wird nach jeder SetChoice aufgerufen
+    void OnChoiceChanged(string levelID, FlashbackChoice choice)
+        => TryEnableGate();
 
-    void OnTriggerEnter(Collider other)
+    // Bei jedem Szenenwechsel prüfen
+    void OnSceneLoaded(UnityEngine.SceneManagement.Scene scene, UnityEngine.SceneManagement.LoadSceneMode mode)
+        => TryEnableGate();
+
+    void TryEnableGate()
     {
-        if (!col.enabled || !other.CompareTag("Player"))
+        // Nur in der Hub-Szene
+        if (UnityEngine.SceneManagement.SceneManager.GetActiveScene().name != hubSceneName)
             return;
 
-        // Lade die Endszene
+        // Alle drei Levels gespielt?
+        foreach (var id in levelIDs)
+            if (!GameManager.Instance.HasChoice(id))
+                return;
+
+        // Einmal freischalten
+        if (!gateEnabled)
+        {
+            gateEnabled = true;
+            col.enabled = true;
+            SpawnEffect();
+        }
+    }
+
+    void SpawnEffect()
+    {
+        if (effectPrefab == null || effectInstance != null) return;
+        var pos = transform.position + effectOffset;
+        effectInstance = Instantiate(effectPrefab, pos, Quaternion.identity, transform);
+        effectInstance.SetActive(true);
+    }
+
+    /// <summary>
+    /// Wird von GateInteractionTrigger aufgerufen, wenn der Spieler E drückt.
+    /// </summary>
+    public void Interact()
+    {
+        if (!gateEnabled) return;
+
+        // Optional vorher Effekt aufräumen
+        if (effectInstance != null)
+            Destroy(effectInstance);
+
+        // Endszene laden
         if (SceneTransitionManager.Instance != null)
             SceneTransitionManager.Instance.LoadFlashback(endSceneName);
         else
