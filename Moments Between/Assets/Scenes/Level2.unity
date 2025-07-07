@@ -10693,7 +10693,7 @@ MonoBehaviour:
   buttonRight: {fileID: 825267708}
   questionText: {fileID: 2009272646}
   slowTimeScale: 0.5
-  levelID: Level 2
+  levelID: Level2
   hubSceneName: Hubscene
 --- !u!65 &65461745
 BoxCollider:

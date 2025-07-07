@@ -190066,7 +190066,7 @@ MonoBehaviour:
   slowTimeScale: 0.5
   slowSpeedFactor: 0.5
   hubSceneName: Hubscene
-  levelID: Level 1
+  levelID: Level1
 --- !u!65 &1359579262
 BoxCollider:
   m_ObjectHideFlags: 0
