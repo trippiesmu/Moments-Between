@@ -5,37 +5,36 @@ using UnityEngine.SceneManagement;
 [RequireComponent(typeof(Collider))]
 public class DecisionAreaTrigger : MonoBehaviour
 {
-    [Header("Choice Settings")]
-    [Tooltip("Level-ID für GameManager.SetChoice")]
+    [Header("Level & Hub")]
+    [Tooltip("ID für GameManager.SetChoice")]
     public string levelID = "Level3";
-    [Tooltip("Name deiner Hub-Szene (exakt so in Build Settings)")]
+    [Tooltip("Exakter Name der Hub-Szene")]
     public string hubSceneName = "HubScene";
+
+    [Header("Choice")]
     [Tooltip("True = Bett A (None), False = Bett B (ChoseRight)")]
     public bool isBedA;
 
-    [Header("Optionaler Visual Marker")]
-    [Tooltip("Z.B. Plane oder Icon, das erst sichtbar wird, wenn der Trigger freigegeben ist")]
+    [Header("Optionaler Marker")]
     public GameObject highlightObject;
 
-    private Collider col;
+    Collider col;
 
     void Awake()
     {
         col = GetComponent<Collider>();
-        if (col == null)
-            Debug.LogError($"{name}: Collider fehlt!");
+        if (col == null) Debug.LogError($"{name}: Collider fehlt!");
     }
 
     void Start()
     {
-        // Collider und Marker zu Beginn ausschalten
-        if (col != null) col.enabled = false;
-        if (highlightObject != null) highlightObject.SetActive(false);
+        col.enabled = false;
+        if (highlightObject) highlightObject.SetActive(false);
     }
 
     void OnEnable()
     {
-        // Jetzt nur noch auf das statische Event aus IntermediateTrigger hören
+        // nur aufs statische Event hören – kein Level3Manager mehr hier
         IntermediateTrigger.OnDecisionPhaseReady += EnableArea;
     }
 
@@ -44,45 +43,34 @@ public class DecisionAreaTrigger : MonoBehaviour
         IntermediateTrigger.OnDecisionPhaseReady -= EnableArea;
     }
 
-    private void EnableArea()
+    void EnableArea()
     {
-        if (col != null) col.enabled = true;
-        if (highlightObject != null) highlightObject.SetActive(true);
+        col.enabled = true;
+        if (highlightObject) highlightObject.SetActive(true);
     }
 
     void OnTriggerEnter(Collider other)
     {
-        // Erst reagieren, wenn wirklich aktiviert ist und der Player reinkommt
-        if (col == null || !col.enabled || !other.CompareTag("Player"))
-            return;
+        if (!col.enabled || !other.CompareTag("Player")) return;
 
-        // Choice speichern
-        if (GameManager.Instance != null)
-        {
-            var choice = isBedA 
-                ? FlashbackChoice.None 
-                : FlashbackChoice.ChoseRight;
-            GameManager.Instance.SetChoice(levelID, choice);
-        }
-        else
-        {
-            Debug.LogWarning($"{name}: Kein GameManager gefunden, Choice nicht gespeichert.");
-        }
+        // Entscheidung speichern
+        var choice = isBedA
+            ? FlashbackChoice.None
+            : FlashbackChoice.ChoseRight;
+        GameManager.Instance.SetChoice(levelID, choice);
 
-        // Zur Hub zurückkehren – genau wie in Level 1 & 2
+        // genau wie in den anderen Levels: zurück in die Hub
         if (SceneTransitionManager.Instance != null)
-        {
             SceneTransitionManager.Instance.ReturnToHub(hubSceneName);
-        }
         else
         {
-            Debug.LogError($"{name}: Kein SceneTransitionManager, lade Hub direkt.");
+            Debug.LogError($"DecisionAreaTrigger: Kein SceneTransitionManager, lade Hub direkt.");
             SceneManager.LoadScene(hubSceneName);
         }
 
-        // Einmal-Trigger: ausschalten
+        // Einmal-Trigger
         col.enabled = false;
-        if (highlightObject != null) highlightObject.SetActive(false);
+        if (highlightObject) highlightObject.SetActive(false);
         enabled = false;
     }
 }

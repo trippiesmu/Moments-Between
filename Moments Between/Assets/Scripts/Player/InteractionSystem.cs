@@ -1,4 +1,3 @@
-// InteractionSystem.cs
 using UnityEngine;
 using TMPro;
 
@@ -9,37 +8,24 @@ public class InteractionSystem : MonoBehaviour
     public LayerMask interactableLayer;
 
     [Header("UI References")]
-    [Tooltip("Panel-GameObject, das den ‘Press E to interact’-Text enthält")]
     public GameObject promptUI;
-    [Tooltip("TextMeshProUGUI-Komponente im Panel")]
     public TextMeshProUGUI promptText;
 
     private Camera playerCamera;
-    private bool isShowing = false;
+    private bool isShowing;
 
     void Start()
     {
         playerCamera = Camera.main;
-
-        // Panel unbedingt im Inspector zuweisen!
-        if (promptUI == null || promptText == null)
-        {
-            Debug.LogError("InteractionSystem: promptUI und promptText müssen im Inspector gesetzt werden!");
-        }
-        else
-        {
-            promptUI.SetActive(false);
-        }
+        if (promptUI != null) promptUI.SetActive(false);
     }
 
     void Update()
     {
-        // Guard: wenn Referenzen fehlen, gar nichts tun
-        if (promptUI == null || promptText == null || playerCamera == null)
+        // Bei aktivem Dialog keine Prompts mehr
+        if (DialogueManager.Instance != null && DialogueManager.Instance.DialogueActive)
             return;
 
-        // (Rest wie gehabt)
-        // Raycast prüfen...
         Ray ray = new Ray(playerCamera.transform.position, playerCamera.transform.forward);
         if (Physics.Raycast(ray, out var hit, interactionDistance, interactableLayer)
             && hit.collider.TryGetComponent<DialogueTrigger>(out var dt))

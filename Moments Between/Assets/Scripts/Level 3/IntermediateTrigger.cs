@@ -5,33 +5,24 @@ using System;
 [RequireComponent(typeof(Collider))]
 public class IntermediateTrigger : MonoBehaviour
 {
-    /// <summary>
-    /// Wird gefeuert, sobald der Spieler in den Zwischenpunkt eintritt.
-    /// </summary>
+    /// <summary>Statisches Event, das die Bett-Trigger freischaltet.</summary>
     public static event Action OnDecisionPhaseReady;
 
     [Header("Optionaler Marker")]
-    [Tooltip("Ein Objekt (z.B. Plane/Partikel/Icon), das erst sichtbar wird, wenn der Trigger aktiviert ist.")]
     public GameObject highlightObject;
 
-    private Collider col;
+    Collider col;
 
     void Awake()
     {
         col = GetComponent<Collider>();
-        if (col == null)
-            Debug.LogError($"{name}: Collider fehlt!");
-        // Collider initial deaktivieren (sichtbar=false → nicht betretbar)
-        col.enabled = false;
+        if (col == null) Debug.LogError($"{name}: Collider fehlt!");
+        col.enabled = false;                         // zunächst nicht betretbar
+        if (highlightObject) highlightObject.SetActive(false);
     }
 
     void Start()
     {
-        // Marker unsichtbar schalten
-        if (highlightObject != null)
-            highlightObject.SetActive(false);
-
-        // Abonniere den Level3Manager – feuert OnReadyToDecide, wenn beide Dialoge fertig sind
         if (Level3Manager.Instance != null)
             Level3Manager.Instance.OnReadyToDecide += Activate;
         else
@@ -44,28 +35,24 @@ public class IntermediateTrigger : MonoBehaviour
             Level3Manager.Instance.OnReadyToDecide -= Activate;
     }
 
-    /// <summary>
-    /// Schaltet diesen Trigger und den Marker frei.
-    /// </summary>
-    private void Activate()
+    /// <summary>Nach beiden Dialogen: Trigger & Marker freischalten.</summary>
+    void Activate()
     {
-        gameObject.SetActive(true);
         col.enabled = true;
-        if (highlightObject != null)
-            highlightObject.SetActive(true);
+        if (highlightObject) highlightObject.SetActive(true);
     }
 
     void OnTriggerEnter(Collider other)
     {
         if (!col.enabled || !other.CompareTag("Player")) return;
 
-        // Event feuern, damit alle DecisionAreaTrigger sich aktivieren
+        // Statisches Event feuern
         OnDecisionPhaseReady?.Invoke();
+        // Und parallel nochmal den Manager, falls noch wer dran hängt
+        Level3Manager.Instance.FireDecisionStage();
 
-        // Selbst wieder abschalten
         col.enabled = false;
-        if (highlightObject != null)
-            highlightObject.SetActive(false);
+        if (highlightObject) highlightObject.SetActive(false);
         enabled = false;
     }
 }

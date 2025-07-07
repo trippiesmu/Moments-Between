@@ -5,38 +5,32 @@ using System;
 public class Level3Manager : MonoBehaviour
 {
     public static Level3Manager Instance { get; private set; }
-
-    [Header("Zwischenschritt")]
-    [Tooltip("Muss der Intermediate-Trigger erst betreten werden?")]
-    public bool requireIntermediateStep = true;
-    [Tooltip("Referenz auf das IntermediateTrigger-GameObject")]
-    public GameObject intermediateTrigger;
-
     public event Action OnReadyToDecide;
+
     private bool talkedToA, talkedToB;
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
+    // Rufe das nach jedem Patienten-Dialog auf
     public void RegisterDialogue(string patientID)
     {
         if (patientID == "A") talkedToA = true;
-        if (patientID == "B") talkedToB = true;
+        else if (patientID == "B") talkedToB = true;
 
         if (talkedToA && talkedToB)
-        {
-            if (requireIntermediateStep && intermediateTrigger != null)
-                intermediateTrigger.SetActive(true);
-            else
-                OnReadyToDecide?.Invoke();
-        }
+            OnReadyToDecide?.Invoke();
     }
 
+    // Wird vom IntermediateTrigger aufgerufen, um die DecisionAreas freizugeben
     public void FireDecisionStage()
-    {
-        OnReadyToDecide?.Invoke();
-    }
+        => OnReadyToDecide?.Invoke();
 }

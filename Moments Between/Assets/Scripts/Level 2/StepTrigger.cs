@@ -26,15 +26,17 @@ public class Level2StepDialogueTrigger : MonoBehaviour
 
     void OnTriggerEnter(Collider other)
     {
-        if (active || !other.CompareTag("Player"))
+        if (active || !other.CompareTag("Player") ||
+            (DialogueManager.Instance != null && DialogueManager.Instance.DialogueActive))
             return;
 
         active = true;
         lineIdx = 0;
         dialogueUI.SetActive(true);
-        DialogueTrigger.dialogueActive = true; // blockiert Movement + Prompt
+        // block Movement + Prompt über DialogueManager.DialogueActive
         StartCoroutine(TypeLine(dialogueLines[lineIdx]));
     }
+
 
     void Update()
     {
@@ -80,12 +82,12 @@ public class Level2StepDialogueTrigger : MonoBehaviour
     private void EndDialogue()
     {
         dialogueUI.SetActive(false);
-        DialogueTrigger.dialogueActive = false;
+        // Dialog beenden, Manager-Flag wird automatisch zurückgesetzt
         active = false;
 
         // Nächsten Quest-Schritt anzeigen
         questLog?.CompleteStep();
-
         Destroy(gameObject);
     }
+
 }

@@ -66,16 +66,18 @@ public class FirstPersonController : MonoBehaviour
 
     void HandleMovement()
     {
-        // Bewegung sperren, falls ein Dialog aktiv ist
-        if (DialogueTrigger.dialogueActive) return;
+        // Sperrung während eines aktiven Dialogs
+        if (DialogueManager.Instance != null && DialogueManager.Instance.DialogueActive)
+            return;
 
         float moveX = Input.GetAxis("Horizontal");
         float moveZ = Input.GetAxis("Vertical");
         float speed = Input.GetKey(KeyCode.LeftShift) ? sprintSpeed : walkSpeed;
-
         Vector3 move = transform.right * moveX + transform.forward * moveZ;
         characterController.SimpleMove(move * speed);
     }
+
+
 
     void HandleViewBobbing()
     {
